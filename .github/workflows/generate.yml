@@ -17,14 +17,33 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      - name: Check source configuration
+        run: |
+          if [ -z "$M3U_SOURCE_URL" ]; then
+            echo "::error title=Missing M3U_SOURCE_URL::Repository secret M3U_SOURCE_URL is empty or missing. Add it under Settings > Secrets and variables > Actions > Repository secrets."
+            exit 1
+          fi
+          echo "MegaOTT source secret is present."
+
       - run: npm install
       - run: npm run build
       - run: npm run map
+
       - name: Validate output
         run: |
           test -s output/megaott.m3u
+          test -s output/megaott.xml
           test -s output/report.json
           cat output/report.json
+
+      - name: Upload generated files
+        uses: actions/upload-artifact@v4
+        with:
+          name: epg-mapper-output
+          path: output/
+          retention-days: 7
