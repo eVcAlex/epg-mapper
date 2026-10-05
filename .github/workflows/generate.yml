@@ -21,6 +21,7 @@ jobs:
         with:
           node-version: 20
       - run: npm install
+      - run: npm run build
       - run: npm run map
       - name: Validate output
         run: |
