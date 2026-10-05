@@ -21,3 +21,11 @@ export interface MatchResult {
   score: number;
   method: "exact-id" | "exact-name" | "alias" | "fuzzy" | "none";
 }
+
+export interface MappingStats {
+  totalInput: number;
+  retained: number;
+  byMarket: Record<Market, number>;
+  matched: Record<MatchResult["method"], number>;
+  sections: Record<string, number>;
+}
