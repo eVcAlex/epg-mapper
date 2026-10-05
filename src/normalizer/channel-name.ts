@@ -1,4 +1,4 @@
-const PROVIDER_PREFIX = /^\s*(EU|AM|OC|NA|CA|UK|US)\s*[|:-]\s*/i;
+const PROVIDER_PREFIX = /^\s*(EU|AM|OC)\s*[|:-]\s*/i;
 
 export function normalizeChannelName(value: string): string {
   let name = value.replace(PROVIDER_PREFIX, "");
