@@ -10,7 +10,7 @@ export async function readEpgChannels(source: Readable): Promise<EpgChannel[]> {
   let currentNames: string[] = [];
   let currentText = "";
 
-  const parser = new SaxesParser(false, { xmlns: false });
+  const parser = new SaxesParser({ xmlns: false });
 
   parser.on("opentag", (tag) => {
     if (tag.name === "channel") {
