@@ -1,6 +1,6 @@
 import type { M3uEntry } from "../types.js";
 
-const ATTR_RE = /([\\w-]+)="([^"]*)"/g;
+const ATTR_RE = /([\w-]+)="([^"]*)"/g;
 
 export function parseExtinf(line: string): M3uEntry {
   const attrs: Record<string, string> = {};
@@ -10,17 +10,23 @@ export function parseExtinf(line: string): M3uEntry {
     if (key && value !== undefined) attrs[key] = value;
   }
 
-  const name = line.includes(",") ? line.split(",", 2)[1]!.trim() : (attrs["tvg-name"] ?? "");
+  const comma = line.indexOf(",");
+  const name = comma >= 0
+    ? line.slice(comma + 1).trim()
+    : (attrs["tvg-name"] ?? "");
 
-  return {
+  const entry: M3uEntry = {
     extinf: line,
     name,
-    groupTitle: attrs["group-title"],
-    tvgId: attrs["tvg-id"],
-    tvgName: attrs["tvg-name"],
-    tvgLogo: attrs["tvg-logo"],
     url: ""
   };
+
+  if (attrs["group-title"] !== undefined) entry.groupTitle = attrs["group-title"];
+  if (attrs["tvg-id"] !== undefined) entry.tvgId = attrs["tvg-id"];
+  if (attrs["tvg-name"] !== undefined) entry.tvgName = attrs["tvg-name"];
+  if (attrs["tvg-logo"] !== undefined) entry.tvgLogo = attrs["tvg-logo"];
+
+  return entry;
 }
 
 export function updateTvgId(extinf: string, epgId: string): string {
