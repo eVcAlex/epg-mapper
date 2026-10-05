@@ -13,11 +13,11 @@ export async function readEpgChannels(source: Readable): Promise<EpgChannel[]> {
   const parser = new SaxesParser({ xmlns: false });
 
   parser.on("opentag", (tag) => {
-    if (tag.name === "channel") {
+    if (String(tag.name) === "channel") {
       inChannel = true;
       currentId = String(tag.attributes.id ?? "");
       currentNames = [];
-    } else if (inChannel && tag.name === "display-name") {
+    } else if (inChannel && String(tag.name) === "display-name") {
       inDisplayName = true;
       currentText = "";
     }
@@ -31,12 +31,12 @@ export async function readEpgChannels(source: Readable): Promise<EpgChannel[]> {
   parser.on("cdata", appendText);
 
   parser.on("closetag", (name) => {
-    if (name === "display-name" && inChannel && inDisplayName) {
+    if (String(name) === "display-name" && inChannel && inDisplayName) {
       const displayName = currentText.trim();
       if (displayName) currentNames.push(displayName);
       inDisplayName = false;
       currentText = "";
-    } else if (name === "channel" && inChannel) {
+    } else if (String(name) === "channel" && inChannel) {
       if (currentId) channels.push({ id: currentId, displayNames: currentNames });
       inChannel = false;
       currentId = "";
