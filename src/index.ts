@@ -25,6 +25,7 @@ const result = await runPipeline(m3uSource, epgSource, output);
 await writeFile(report, JSON.stringify({
   generatedAt: new Date().toISOString(),
   output: result.outputPath,
+  epgOutput: result.epgOutputPath,
   stats: result.stats,
   matchedEpgIds: result.matchedEpgIds.size
 }, null, 2) + "\n");
