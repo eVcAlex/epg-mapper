@@ -1,6 +1,5 @@
 import { createWriteStream, promises as fs } from "node:fs";
-import { gunzipSync } from "node:zlib";
-import { Readable } from "node:stream";
+import { dirname } from "node:path";
 
 function getAttribute(block: string, name: string): string | undefined {
   const match = block.match(new RegExp(`\\b${name}="([^"]*)"`, "i"));
@@ -13,7 +12,7 @@ export async function filterXmltv(
   outputPath: string
 ): Promise<number> {
   const source = await import("../io/source.js").then((m) => m.openSource(sourcePathOrUrl));
-  await fs.mkdir(new URL(".", `file://${outputPath.startsWith("/") ? "" : process.cwd() + "/"}`).pathname).catch(() => undefined);
+  await fs.mkdir(dirname(outputPath), { recursive: true });
 
   const writer = createWriteStream(outputPath, { encoding: "utf8" });
   let buffer = "";
