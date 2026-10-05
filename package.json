@@ -1,0 +1,19 @@
+{
+  "name": "epg-mapper",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Provider-agnostic IPTV M3U/XMLTV mapper and curator.",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}
