@@ -1,0 +1,14 @@
+node_modules/
+dist/
+output/
+.env
+*.local
+*.log
+.DS_Store
+
+# Local/provider data
+*.m3u
+*.m3u8
+*.xml
+*.xmltv
+*.gz
