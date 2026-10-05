@@ -1,0 +1,18 @@
+{
+  "id": "megaott",
+  "name": "MegaOTT",
+  "marketPolicy": {
+    "allowed": ["UK", "US", "CA", "IE", "AU", "NZ"],
+    "priority": ["UK", "US", "CA", "IE", "AU", "NZ"]
+  },
+  "source": {
+    "m3uUrlEnv": "M3U_SOURCE_URL",
+    "epgUrlEnv": "EPG_SOURCE_URL"
+  },
+  "normalization": {
+    "ignoreProviderPrefixes": ["EU", "AM", "OC"]
+  },
+  "retention": {
+    "keepUnmatched": true
+  }
+}
