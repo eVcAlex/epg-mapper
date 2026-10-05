@@ -1,0 +1,10 @@
+{
+  "markets": [
+    { "id": "UK", "name": "United Kingdom", "priority": 1 },
+    { "id": "US", "name": "United States", "priority": 2 },
+    { "id": "CA", "name": "Canada", "priority": 3 },
+    { "id": "IE", "name": "Ireland", "priority": 4 },
+    { "id": "AU", "name": "Australia", "priority": 5 },
+    { "id": "NZ", "name": "New Zealand", "priority": 6 }
+  ]
+}
