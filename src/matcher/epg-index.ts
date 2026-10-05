@@ -119,7 +119,7 @@ export class EpgIndex {
         if (!channel) continue;
 
         for (const displayName of channel.displayNames) {
-          const score = similarity(key, normalizeChannelName(displayName));
+          let score = similarity(key, normalizeChannelName(displayName));
           if (bias > 0) score += 0.02;
           if (score > bestScore) {
             bestScore = score;
