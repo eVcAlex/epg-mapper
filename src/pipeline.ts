@@ -157,7 +157,7 @@ export async function runPipeline(
       const cacheKey = `${market}|${entry.tvgId ?? ""}|${entry.tvgName ?? ""}|${entry.name}`;
       let match = matchCache.get(cacheKey);
       if (!match) {
-        match = index.match(entry, aliases);
+        match = index.match(entry, market, aliases);
         matchCache.set(cacheKey, match);
       }
 
