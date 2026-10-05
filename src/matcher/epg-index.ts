@@ -1,4 +1,4 @@
-import type { EpgChannel, M3uEntry, MatchResult } from "../types.js";
+import type { EpgChannel, M3uEntry, MatchResult, Market } from "../types.js";
 import { normalizeChannelName } from "../normalizer/channel-name.js";
 
 function similarity(a: string, b: string): number {
@@ -14,6 +14,27 @@ function similarity(a: string, b: string): number {
   }
 
   return (2 * intersection) / (aTokens.size + bTokens.size);
+}
+
+function countryBias(id: string, market: Market): number {
+  const lower = id.toLowerCase();
+
+  const matchingSuffixes: Record<Market, RegExp> = {
+    UK: /(?:^|[.-])uk(?:[.-]|$)/i,
+    US: /(?:^|[.-])us(?:[.-]|$)/i,
+    CA: /(?:^|[.-])ca(?:[.-]|$)/i,
+    IE: /(?:^|[.-])ie(?:[.-]|$)/i,
+    AU: /(?:^|[.-])au(?:[.-]|$)/i,
+    NZ: /(?:^|[.-])nz(?:[.-]|$)|newzealand/i
+  };
+
+  const conflictingSuffixes = Object.entries(matchingSuffixes)
+    .filter(([otherMarket]) => otherMarket !== market)
+    .map(([, pattern]) => pattern);
+
+  if (matchingSuffixes[market].test(lower)) return 3;
+  if (conflictingSuffixes.some((pattern) => pattern.test(lower))) return -5;
+  return 0;
 }
 
 export class EpgIndex {
@@ -43,8 +64,12 @@ export class EpgIndex {
     }
   }
 
-  match(entry: M3uEntry, aliases: Record<string, string> = {}): MatchResult {
-    if (entry.tvgId && this.byId.has(entry.tvgId)) {
+  match(
+    entry: M3uEntry,
+    market: Market,
+    aliases: Record<string, string> = {}
+  ): MatchResult {
+    if (entry.tvgId && this.byId.has(entry.tvgId) && countryBias(entry.tvgId, market) >= 0) {
       return { epgId: entry.tvgId, score: 1, method: "exact-id" };
     }
 
@@ -56,14 +81,27 @@ export class EpgIndex {
     for (const key of [entry.tvgId, ...names]) {
       if (!key) continue;
       const alias = aliases[key] ?? aliases[normalizeChannelName(key)];
-      if (alias && this.byId.has(alias)) {
+      if (alias && this.byId.has(alias) && countryBias(alias, market) >= 0) {
         return { epgId: alias, score: 0.99, method: "alias" };
       }
     }
 
     for (const key of names) {
-      const ids = this.byName.get(key);
-      if (ids?.[0]) return { epgId: ids[0], score: 0.95, method: "exact-name" };
+      const candidates = this.byName.get(key) ?? [];
+      let bestId: string | undefined;
+      let bestBias = -Infinity;
+
+      for (const id of candidates) {
+        const bias = countryBias(id, market);
+        if (bias > bestBias) {
+          bestBias = bias;
+          bestId = id;
+        }
+      }
+
+      if (bestId && bestBias >= 0) {
+        return { epgId: bestId, score: bestBias > 0 ? 0.97 : 0.95, method: "exact-name" };
+      }
     }
 
     for (const key of names) {
@@ -74,11 +112,15 @@ export class EpgIndex {
       let bestScore = 0;
 
       for (const id of this.byFirstToken.get(firstToken) ?? []) {
+        const bias = countryBias(id, market);
+        if (bias < 0) continue;
+
         const channel = this.byId.get(id);
         if (!channel) continue;
 
         for (const displayName of channel.displayNames) {
           const score = similarity(key, normalizeChannelName(displayName));
+          if (bias > 0) score += 0.02;
           if (score > bestScore) {
             bestScore = score;
             bestId = id;
@@ -87,7 +129,7 @@ export class EpgIndex {
       }
 
       if (bestId && bestScore >= 0.9) {
-        return { epgId: bestId, score: bestScore, method: "fuzzy" };
+        return { epgId: bestId, score: Math.min(bestScore, 0.99), method: "fuzzy" };
       }
     }
 
