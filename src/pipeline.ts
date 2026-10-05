@@ -9,6 +9,7 @@ import { classifyMarket } from "./classifier/market.js";
 import { classifyCategory, isExcludedVod } from "./classifier/category.js";
 import { sectionFor } from "./classifier/section.js";
 import { renderM3uEntry } from "./generator/m3u.js";
+import { filterXmltv } from "./generator/xmltv.js";
 import { loadAliases } from "./aliases.js";
 
 const MARKETS: Market[] = ["UK", "US", "CA", "IE", "AU", "NZ"];
@@ -113,6 +114,7 @@ async function writeWithBackpressure(
 
 export interface PipelineResult {
   outputPath: string;
+  epgOutputPath: string;
   stats: MappingStats;
   matchedEpgIds: Set<string>;
 }
@@ -228,7 +230,9 @@ export async function runPipeline(
       finalWriter.end();
     });
 
-    return { outputPath, stats, matchedEpgIds };
+    const epgOutputPath = outputPath.replace(/\\.m3u8?$/i, ".xml");
+    await filterXmltv(epgSource, matchedEpgIds, epgOutputPath);
+    return { outputPath, epgOutputPath, stats, matchedEpgIds };
   } finally {
     await fs.rm(tempDir, { recursive: true, force: true });
   }
