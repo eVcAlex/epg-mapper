@@ -1,0 +1,41 @@
+name: Probe seller playlist
+
+# One-off check: can GitHub's network fetch the seller's playlist, how big is it, and which hosts do its streams use?
+# Prints only a status code, size, timing and stream hostnames. Never the URL, the login or any playlist content.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    env:
+      SELLER_URL_VOD: ${{ secrets.SELLER_URL_VOD }}
+      SELLER_URL_LIVE: ${{ secrets.SELLER_URL_LIVE }}
+
+    steps:
+      - name: Probe
+        shell: bash
+        run: |
+          set +x
+          probe() {
+            label="$1"; url="$2"
+            if [ -z "$url" ]; then echo "[$label] secret not set, skipped"; return; fi
+            echo "[$label] fetching"
+            result=$(curl -s -L -A node --max-time 300 -o "/tmp/$label.m3u" \
+              -w "status=%{http_code} bytes=%{size_download} seconds=%{time_total} type=%{content_type}" "$url" || echo "curl-failed")
+            echo "[$label] $result"
+            if head -c 7 "/tmp/$label.m3u" 2>/dev/null | grep -q '^#EXTM3U'; then
+              echo "[$label] looks like an M3U; entries: $(grep -c '^#EXTINF' "/tmp/$label.m3u")"
+              echo "[$label] stream hosts (host:port, count):"
+              grep -E '^https?://' "/tmp/$label.m3u" | sed -E 's#^https?://([^/]+).*#\1#' | sort | uniq -c | sort -rn | head -10
+            else
+              echo "[$label] not an M3U (blocked, error page or empty); content not shown"
+            fi
+            rm -f "/tmp/$label.m3u"
+          }
+          probe vod "$SELLER_URL_VOD"
+          probe live "$SELLER_URL_LIVE"
